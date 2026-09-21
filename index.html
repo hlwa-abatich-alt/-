@@ -1,490 +1,603 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>حلوة عباتچ - نظام إدارة المبيعات والمخزون</title>
-    
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#0f1424">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="حلوة عباتچ">
-    <meta name="description" content="تطبيق إدارة المبيعات والمخزون والديون لمحل حلوة عباتچ">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>حلوة عباتچ · نظام إدارة المبيعات</title>
+<meta name="description" content="نظام حلوة عباتچ لإدارة الموديلات، المشتريات، المبيعات، والديون.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="حلوة عباتچ">
+<meta name="theme-color" content="#0f1424">
 
-    <!-- Fonts & Icons -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-    <style>
-        :root {
-            --bg-primary: #0f1424;
-            --bg-secondary: #1a2035;
-            --card-bg: #242b45;
-            --accent-gold: #d4af37;
-            --accent-hover: #b89628;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --danger: #ef4444;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --radius: 12px;
-            --transition: all 0.3s ease;
-        }
+<style>
+:root {
+    --bg-primary: #0f1424;
+    --bg-card: #1a2035;
+    --accent: #d4af37;
+    --accent-hover: #f1c40f;
+    --text-main: #ffffff;
+    --text-sub: #8a99ad;
+    --danger: #e74c3c;
+    --success: #2ecc71;
+    --border: #2a344d;
+}
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Tajawal', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
 
-        body {
-            background-color: var(--bg-primary);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding-bottom: 75px;
-        }
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-main);
+    padding-bottom: 70px;
+    direction: rtl;
+}
 
-        header {
-            background-color: var(--bg-secondary);
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--accent-gold);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
+/* Header & Status Bar */
+header {
+    background-color: var(--bg-card);
+    padding: 15px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
 
-        .brand-title {
-            color: var(--accent-gold);
-            font-size: 1.4rem;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+.cloud-status {
+    font-size: 0.8rem;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
 
-        .container {
-            padding: 15px;
-            max-width: 800px;
-            margin: 0 auto;
-            width: 100%;
-        }
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--danger);
+}
 
-        .page-section {
-            display: none;
-            animation: fadeIn 0.3s ease-in-out;
-        }
+.status-dot.online {
+    background-color: var(--success);
+}
 
-        .page-section.active {
-            display: block;
-        }
+/* Navigation Bar */
+nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--bg-card);
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    z-index: 100;
+}
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+nav button {
+    background: none;
+    border: none;
+    color: var(--text-sub);
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
 
-        .card {
-            background-color: var(--card-bg);
-            border-radius: var(--radius);
-            padding: 18px;
-            margin-bottom: 15px;
-            border: 1px solid rgba(212, 175, 55, 0.1);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+nav button.active {
+    color: var(--accent);
+}
 
-        .form-group {
-            margin-bottom: 12px;
-        }
+/* Main Container & Sections */
+.container {
+    padding: 15px;
+    max-width: 600px;
+    margin: 0 auto;
+}
 
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
+.section {
+    display: none;
+}
 
-        .form-control {
-            width: 100%;
-            padding: 10px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background-color: var(--bg-secondary);
-            color: #fff;
-            font-size: 1rem;
-            outline: none;
-        }
+.section.active {
+    display: block;
+}
 
-        .form-control:focus {
-            border-color: var(--accent-gold);
-        }
+/* Form Controls */
+.form-group {
+    margin-bottom: 15px;
+}
 
-        .btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            background-color: var(--accent-gold);
-            color: var(--bg-primary);
-        }
+label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-sub);
+    font-size: 0.9rem;
+}
 
-        .btn:active {
-            background-color: var(--accent-hover);
-        }
+input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-main);
+    font-size: 1rem;
+    outline: none;
+}
 
-        .item-list {
-            list-style: none;
-        }
+input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+}
 
-        .list-item {
-            background-color: var(--bg-secondary);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-right: 4px solid var(--accent-gold);
-        }
+button.btn-action {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--accent);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
 
-        .delete-btn {
-            background: transparent;
-            color: var(--danger);
-            border: none;
-            cursor: pointer;
-            font-size: 1.1rem;
-            padding: 5px 10px;
-        }
+button.btn-action:hover {
+    background-color: var(--accent-hover);
+}
 
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: var(--bg-secondary);
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
-            border-top: 1px solid rgba(212, 175, 55, 0.2);
-            z-index: 1000;
-        }
+/* Cards & Lists */
+.card {
+    background-color: var(--bg-card);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border);
+}
 
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.75rem;
-            gap: 4px;
-            cursor: pointer;
-            width: 25%;
-        }
+.card-title {
+    font-size: 1.1rem;
+    color: var(--accent);
+    margin-bottom: 8px;
+}
 
-        .nav-item i {
-            font-size: 1.2rem;
-        }
+.card-info {
+    font-size: 0.9rem;
+    color: var(--text-sub);
+    margin-bottom: 4px;
+}
 
-        .nav-item.active {
-            color: var(--accent-gold);
-        }
+.card-img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-top: 10px;
+}
 
-        .stat-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .stat-card {
-            background: var(--bg-secondary);
-            padding: 15px;
-            border-radius: var(--radius);
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .stat-card .val {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--accent-gold);
-            margin-top: 5px;
-        }
-    </style>
+.sync-bar {
+    background-color: #161b2e;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1px dashed var(--accent);
+    text-align: center;
+    font-size: 0.85rem;
+}
+</style>
 </head>
 <body>
 
-    <header>
-        <div class="brand-title">
-            <i class="fa-solid fa-gem"></i>
-            <span>حلوة عباتچ</span>
-        </div>
-        <div id="sync-status" style="font-size: 0.85rem; color: var(--warning);">
-            <i class="fa-solid fa-spinner fa-spin"></i> يتصل بـ Firestore...
-        </div>
-    </header>
+<header>
+    <h2>حلوة عباتچ</h2>
+    <div class="cloud-status">
+        <div id="statusDot" class="status-dot"></div>
+        <span id="statusText">جاري الاتصال بالسحابة...</span>
+    </div>
+</header>
 
-    <div class="container">
+<div class="container">
 
-        <!-- 1. صفحة المبيعات وتسجيل الفواتير -->
-        <section id="sales" class="page-section active">
-            <div class="card">
-                <h3><i class="fa-solid fa-file-invoice"></i> تسجيل فاتورة / بيع جديد</h3>
-                <br>
-                <div class="form-group">
-                    <label>اسم الزبون (customerName)</label>
-                    <input type="text" id="customerName" class="form-control" placeholder="مثال: ميسم">
-                </div>
-                <div class="form-group">
-                    <label>تفاصيل الموديل/البضاعة (itemDetails)</label>
-                    <input type="text" id="itemDetails" class="form-control" placeholder="مثال: دبل ستراس">
-                </div>
-                <div class="form-group">
-                    <label>المبلغ الإجمالي (totalAmount)</label>
-                    <input type="number" id="totalAmount" class="form-control" placeholder="مثال: 30000">
-                </div>
-                <button class="btn" onclick="addInvoice()">
-                    <i class="fa-solid fa-check"></i> حفظ الفاتورة في Firestore
-                </button>
-            </div>
-        </section>
-
-        <!-- 2. صفحة عرض جميع الفواتير -->
-        <section id="inventory" class="page-section">
-            <div class="card">
-                <h3><i class="fa-solid fa-list-check"></i> جميع الفواتير المسجلة</h3>
-                <br>
-                <ul id="invoices-list" class="item-list"></ul>
-            </div>
-        </section>
-
-        <!-- 3. صفحة الديون والذمم -->
-        <section id="debts" class="page-section">
-            <div class="card">
-                <h3><i class="fa-solid fa-hand-holding-dollar"></i> سجل الديون والذمم المالية</h3>
-                <br>
-                <ul id="debts-list" class="item-list"></ul>
-            </div>
-        </section>
-
-        <!-- 4. التقارير والملخص -->
-        <section id="reports" class="page-section">
-            <div class="stat-grid">
-                <div class="stat-card">
-                    <div>إجمالي الفواتير</div>
-                    <div class="val" id="total-count-val">0</div>
-                </div>
-                <div class="stat-card">
-                    <div>المبلغ الإجمالي</div>
-                    <div class="val" id="total-sum-val">0 د.ع</div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>آخر العمليات المسجلة</h3>
-                <br>
-                <ul id="recent-list" class="item-list"></ul>
-            </div>
-        </section>
-
+    <!-- Configuration Banner -->
+    <div id="configNotice" class="sync-bar" style="display: none;">
+        تنبيه: اضبط إعدادات Firebase الخاصة بك في أسفل الكود لتفعيل المزامنة السحابية الحقيقية!
     </div>
 
-    <!-- الشريط السفلي للتنقل -->
-    <nav class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('sales', this)">
-            <i class="fa-solid fa-cash-register"></i>
-            <span>إضافة فاتورة</span>
+    <!-- Section: Add Product / Inventory -->
+    <div id="sec-models" class="section active">
+        <div class="card">
+            <h3 class="card-title">إضافة موديل جديد</h3>
+            <form id="addModelForm">
+                <div class="form-group">
+                    <label>اسم الموديل / الرمز</label>
+                    <input type="text" id="modelName" required placeholder="مثال: عباية بشت أسود">
+                </div>
+                <div class="form-group">
+                    <label>سعر الشراء / التكلفة (د.ع)</label>
+                    <input type="number" id="modelCost" required placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>سعر البيع المقترح (د.ع)</label>
+                    <input type="number" id="modelPrice" required placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>الكمية المتوفرة</label>
+                    <input type="number" id="modelQty" required placeholder="1">
+                </div>
+                <div class="form-group">
+                    <label>صورة الموديل (سيتم ضغطها تلقائياً)</label>
+                    <input type="file" id="modelImage" accept="image/*">
+                </div>
+                <button type="submit" class="btn-action">حفظ الموديل</button>
+            </form>
         </div>
-        <div class="nav-item" onclick="switchTab('inventory', this)">
-            <i class="fa-solid fa-receipt"></i>
-            <span>الفواتير</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('debts', this)">
-            <i class="fa-solid fa-file-invoice-dollar"></i>
-            <span>الديون</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('reports', this)">
-            <i class="fa-solid fa-chart-line"></i>
-            <span>التقارير</span>
-        </div>
-    </nav>
 
-    <!-- Firebase Firestore Integration Script -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { 
-            getFirestore, 
-            collection, 
-            addDoc, 
-            deleteDoc, 
-            doc, 
-            onSnapshot, 
-            query, 
-            orderBy, 
-            serverTimestamp 
-        } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        <h3>المخزن الحالي</h3>
+        <div id="modelsList"></div>
+    </div>
 
-        // إعدادات مشروع Firebase الخاص بك (hlwa-abatich)
-        const firebaseConfig = {
-            apiKey: "AIzaSyDF1WwFdugcjrNWYfs3QXo2ktatdeWuvf4",
-            authDomain: "hlwa-abatich.firebaseapp.com",
-            projectId: "hlwa-abatich",
-            storageBucket: "hlwa-abatich.firebasestorage.app",
-            messagingSenderId: "100175694788",
-            appId: "1:100175694788:web:3820cf0a38d72c6bcab291",
-            measurementId: "G-SCT7EX0CK4"
+    <!-- Section: Sales -->
+    <div id="sec-sales" class="section">
+        <div class="card">
+            <h3 class="card-title">تسجيل عملية بيع</h3>
+            <form id="addSaleForm">
+                <div class="form-group">
+                    <label>اختر الموديل</label>
+                    <select id="saleModelSelect" required>
+                        <option value="">اختر موديل...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>سعر البيع الفعلي (د.ع)</label>
+                    <input type="number" id="salePrice" required placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>الكمية المباعة</label>
+                    <input type="number" id="saleQty" value="1" required>
+                </div>
+                <div class="form-group">
+                    <label>اسم الزبون (اختياري)</label>
+                    <input type="text" id="customerName" placeholder="اسم الزبون">
+                </div>
+                <div class="form-group">
+                    <label>المبلغ المدفوع (اتركه أقل من السعر إذا كان دين)</label>
+                    <input type="number" id="paidAmount" placeholder="المبلغ">
+                </div>
+                <button type="submit" class="btn-action">إتمام البيع</button>
+            </form>
+        </div>
+
+        <h3>سجل المبيعات الأخيرة</h3>
+        <div id="salesList"></div>
+    </div>
+
+    <!-- Section: Debts -->
+    <div id="sec-debts" class="section">
+        <h3>سجل الديون والالتزامات</h3>
+        <div id="debtsList"></div>
+    </div>
+
+</div>
+
+<!-- Navigation Footer -->
+<nav>
+    <button onclick="switchTab('sec-models')" class="active" id="btn-sec-models">
+        <span>👗</span> الموديلات
+    </button>
+    <button onclick="switchTab('sec-sales')" id="btn-sec-sales">
+        <span>💰</span> المبيعات
+    </button>
+    <button onclick="switchTab('sec-debts')" id="btn-sec-debts">
+        <span>📋</span> الديون
+    </button>
+</nav>
+
+<script>
+// ==========================================
+// 1. إعدادات السحابة (Firebase Configuration)
+// ==========================================
+// استبدل الأسطر التالية بإعدادات مشروعك من Firebase Console ليعمل الربط مع جهاز آخر
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "YOUR_APP_ID"
+};
+
+// تهيئة Firebase
+let db = null;
+let isOnline = false;
+
+try {
+    if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        // تفعيل التخزين المحلي ليعمل بدون إنترنت أيضاً
+        db.enablePersistence().catch(err => console.log("Persistence error:", err));
+        isOnline = true;
+        updateStatus(true, "متصل بالسحابة (مزامنة فورية)");
+    } else {
+        document.getElementById('configNotice').style.display = 'block';
+        updateStatus(false, "يعمل محلياً فقط (لم يكتمل إعداد Firebase)");
+    }
+} catch (e) {
+    console.error("Firebase init failed:", e);
+    updateStatus(false, "خطأ في الاتصال بالسحابة");
+}
+
+function updateStatus(online, message) {
+    const dot = document.getElementById('statusDot');
+    const text = document.getElementById('statusText');
+    text.innerText = message;
+    if (online) {
+        dot.classList.add('online');
+    } else {
+        dot.classList.remove('online');
+    }
+}
+
+// ==========================================
+// 2. إدارة البيانات المحلية (Local Fallback)
+// ==========================================
+let localData = {
+    models: JSON.parse(localStorage.getItem('hw_models') || '[]'),
+    sales: JSON.parse(localStorage.getItem('hw_sales') || '[]')
+};
+
+function saveLocal() {
+    localStorage.setItem('hw_models', JSON.stringify(localData.models));
+    localStorage.setItem('hw_sales', JSON.stringify(localData.sales));
+    renderAll();
+}
+
+// ==========================================
+// 3. ضغط الصور لتفادي استهلاك المساحة
+// ==========================================
+function compressImage(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 400;
+            const scaleSize = MAX_WIDTH / img.width;
+            canvas.width = MAX_WIDTH;
+            canvas.height = img.height * scaleSize;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            // ضغط إلى JPEG بجودة 60%
+            callback(canvas.toDataURL('image/jpeg', 0.6));
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+// ==========================================
+// 4. وظائف النوافذ والتنقل
+// ==========================================
+function switchTab(tabId) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    
+    document.getElementById(tabId).classList.add('active');
+    document.getElementById('btn-' + tabId).classList.add('active');
+}
+
+// ==========================================
+// 5. العمليات الأحداث (Events & Logic)
+// ==========================================
+
+// إضافة موديل
+document.getElementById('addModelForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('modelName').value;
+    const cost = parseFloat(document.getElementById('modelCost').value) || 0;
+    const price = parseFloat(document.getElementById('modelPrice').value) || 0;
+    const qty = parseInt(document.getElementById('modelQty').value) || 0;
+    const imgInput = document.getElementById('modelImage');
+
+    const createModel = (imgBase64) => {
+        const newModel = {
+            id: Date.now().toString(),
+            name,
+            cost,
+            price,
+            qty,
+            image: imgBase64 || '',
+            createdAt: new Date().toISOString()
         };
 
-        // تهيئة Firebase و Firestore
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        if (isOnline && db) {
+            db.collection('models').doc(newModel.id).set(newModel);
+        } else {
+            localData.models.push(newModel);
+            saveLocal();
+        }
 
-        // الاستماع المباشر للتغييرات في مجموعة invoices
-        const invoicesRef = collection(db, "invoices");
-        const q = query(invoicesRef, orderBy("createdAt", "desc"));
+        this.reset();
+        alert('تم حفظ الموديل بنجاح');
+    };
 
-        onSnapshot(q, (snapshot) => {
-            const invoicesList = document.getElementById('invoices-list');
-            const debtsList = document.getElementById('debts-list');
-            const recentList = document.getElementById('recent-list');
-            const syncStatus = document.getElementById('sync-status');
+    if (imgInput.files && imgInput.files[0]) {
+        compressImage(imgInput.files[0], createModel);
+    } else {
+        createModel('');
+    }
+});
 
-            syncStatus.style.color = 'var(--success)';
-            syncStatus.innerHTML = '<i class="fa-solid fa-cloud-check"></i> متصل بـ Firestore';
+// تسجيل بيع
+document.getElementById('addSaleForm').addEventListener('submit', function(e) {
+    e.preventDefault();
 
-            invoicesList.innerHTML = '';
-            debtsList.innerHTML = '';
-            recentList.innerHTML = '';
+    const modelId = document.getElementById('saleModelSelect').value;
+    const salePrice = parseFloat(document.getElementById('salePrice').value) || 0;
+    const qty = parseInt(document.getElementById('saleQty').value) || 1;
+    const customer = document.getElementById('customerName').value || 'زبون عام';
+    const paid = parseFloat(document.getElementById('paidAmount').value);
+    
+    const actualPaid = isNaN(paid) ? (salePrice * qty) : paid;
+    const totalDebt = (salePrice * qty) - actualPaid;
 
-            let totalSum = 0;
-            let totalCount = 0;
+    if (!modelId) return alert('يرجى اختيار الموديل');
 
-            if (snapshot.empty) {
-                invoicesList.innerHTML = '<p style="text-align:center; color:var(--text-muted);">لا توجد فواتير حالياً في Firestore</p>';
-                debtsList.innerHTML = '<p style="text-align:center; color:var(--text-muted);">لا توجد ديون مسجلة</p>';
-                recentList.innerHTML = '<p style="text-align:center; color:var(--text-muted);">لا توجد عمليات</p>';
-                document.getElementById('total-sum-val').innerText = '0 د.ع';
-                document.getElementById('total-count-val').innerText = '0';
-                return;
-            }
+    const saleData = {
+        id: Date.now().toString(),
+        modelId,
+        salePrice,
+        qty,
+        customer,
+        paid: actualPaid,
+        debt: totalDebt > 0 ? totalDebt : 0,
+        date: new Date().toISOString()
+    };
 
-            snapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                const id = docSnap.id;
-                const amount = data.totalAmount || 0;
-                const customer = data.customerName || 'بدون اسم';
-                const details = data.itemDetails || 'بدون تفاصيل';
-                const dateStr = data.createdAt?.toDate ? data.createdAt.toDate().toLocaleString('ar-IQ') : 'الآن';
-
-                totalSum += amount;
-                totalCount++;
-
-                const itemHTML = `
-                    <li class="list-item">
-                        <div>
-                            <strong>${customer}</strong>
-                            <div style="font-size:0.85rem; color:var(--text-muted); margin-top:2px;">${details}</div>
-                            <small style="color:var(--text-muted); font-size:0.75rem;">${dateStr}</small>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            <span style="color:var(--accent-gold); font-weight:bold;">${amount.toLocaleString()} د.ع</span>
-                            <button class="delete-btn" onclick="deleteInvoice('${id}')" title="حذف">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </div>
-                    </li>
-                `;
-
-                // تعبئة القوائم
-                invoicesList.innerHTML += itemHTML;
-                recentList.innerHTML += itemHTML;
-
-                // تصنيف الديون (إذا كان يحتوي التفاصيل على كلمة دين أو آجل)
-                if (details.includes('دين') || details.includes('آجل')) {
-                    debtsList.innerHTML += itemHTML;
-                }
-            });
-
-            if (debtsList.innerHTML === '') {
-                debtsList.innerHTML = '<p style="text-align:center; color:var(--text-muted);">لا توجد ديون مسجلة</p>';
-            }
-
-            document.getElementById('total-sum-val').innerText = totalSum.toLocaleString() + ' د.ع';
-            document.getElementById('total-count-val').innerText = totalCount;
-
-        }, (error) => {
-            console.error("Firestore Error: ", error);
-            const syncStatus = document.getElementById('sync-status');
-            syncStatus.style.color = 'var(--danger)';
-            syncStatus.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> خطأ بالاتصال';
-        });
-
-        // إضافة فاتورة جديدة إلى مجموعة invoices
-        window.addInvoice = async function() {
-            const customerName = document.getElementById('customerName').value.trim();
-            const itemDetails = document.getElementById('itemDetails').value.trim();
-            const totalAmount = parseFloat(document.getElementById('totalAmount').value);
-
-            if (!customerName || !itemDetails || isNaN(totalAmount)) {
-                alert('يرجى كتابة اسم الزبون وتفاصيل المواد والمبلغ الإجمالي بصورة صحيحة');
-                return;
-            }
-
-            try {
-                await addDoc(collection(db, "invoices"), {
-                    customerName: customerName,
-                    itemDetails: itemDetails,
-                    totalAmount: totalAmount,
-                    createdAt: serverTimestamp()
+    if (isOnline && db) {
+        // تحديث المخزن المتبقي والبيع في السحابة
+        db.collection('sales').doc(saleData.id).set(saleData);
+        db.collection('models').doc(modelId).get().then(doc => {
+            if(doc.exists) {
+                const currentQty = doc.data().qty || 0;
+                db.collection('models').doc(modelId).update({
+                    qty: Math.max(0, currentQty - qty)
                 });
-
-                document.getElementById('customerName').value = '';
-                document.getElementById('itemDetails').value = '';
-                document.getElementById('totalAmount').value = '';
-                
-                alert('تم حفظ الفاتورة بنجاح في قاعدة البيانات!');
-            } catch (error) {
-                alert('حدث خطأ أثناء حفظ الفاتورة: ' + error.message);
             }
-        };
+        });
+    } else {
+        localData.sales.push(saleData);
+        const model = localData.models.find(m => m.id === modelId);
+        if (model) {
+            model.qty = Math.max(0, model.qty - qty);
+        }
+        saveLocal();
+    }
 
-        // حذف فاتورة من Firestore
-        window.deleteInvoice = async function(id) {
-            if (confirm('هل أنت تأكد من حذف هذه الفاتورة نهائياً؟')) {
-                try {
-                    await deleteDoc(doc(db, "invoices", id));
-                } catch (error) {
-                    alert('حدث خطأ أثناء الحذف: ' + error.message);
-                }
-            }
-        };
+    this.reset();
+    alert('تم تسجيل عملية البيع');
+});
 
-        // التنقل بين الشاشات
-        window.switchTab = function(tabId, element) {
-            document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            
-            document.getElementById(tabId).classList.add('active');
-            element.classList.add('active');
-        };
-    </script>
+// ==========================================
+// 6. عرض البيانات وتحديث الواجهة (Render)
+// ==========================================
+function renderAll() {
+    renderModels();
+    renderSales();
+    renderDebts();
+}
+
+function renderModels() {
+    const container = document.getElementById('modelsList');
+    const select = document.getElementById('saleModelSelect');
+    
+    const list = isOnline ? liveModels : localData.models;
+
+    container.innerHTML = '';
+    select.innerHTML = '<option value="">اختر موديل...</option>';
+
+    list.forEach(m => {
+        // ملء قائمة الاختيار للبيع
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.innerText = `${m.name} (المتوفر: ${m.qty})`;
+        select.appendChild(opt);
+
+        // ملء بطاقات العرض
+        container.innerHTML += `
+            <div class="card">
+                <div class="card-title">${m.name}</div>
+                <div class="card-info">التكلفة: ${m.cost.toLocaleString()} د.ع | البيع: ${m.price.toLocaleString()} د.ع</div>
+                <div class="card-info">الكمية المتوفرة: <strong>${m.qty}</strong></div>
+                ${m.image ? `<img src="${m.image}" class="card-img" />` : ''}
+            </div>
+        `;
+    });
+}
+
+function renderSales() {
+    const container = document.getElementById('salesList');
+    const list = isOnline ? liveSales : localData.sales;
+    const models = isOnline ? liveModels : localData.models;
+
+    container.innerHTML = '';
+
+    list.slice().reverse().forEach(s => {
+        const model = models.find(m => m.id === s.modelId);
+        const modelName = model ? model.name : 'موديل غير معروف';
+
+        container.innerHTML += `
+            <div class="card">
+                <div class="card-title">${modelName} (عدد ${s.qty})</div>
+                <div class="card-info">الزبون: ${s.customer}</div>
+                <div class="card-info">المبلغ الكلي: ${(s.salePrice * s.qty).toLocaleString()} د.ع</div>
+                <div class="card-info">الواصل: ${s.paid.toLocaleString()} د.ع</div>
+                ${s.debt > 0 ? `<div class="card-info" style="color:var(--danger)">المتبقي (دين): ${s.debt.toLocaleString()} د.ع</div>` : ''}
+            </div>
+        `;
+    });
+}
+
+function renderDebts() {
+    const container = document.getElementById('sec-debts');
+    const list = isOnline ? liveSales : localData.sales;
+    const debts = list.filter(s => s.debt > 0);
+
+    container.innerHTML = '<h3>سجل الديون والالتزامات</h3>';
+
+    if (debts.length === 0) {
+        container.innerHTML += '<p style="color:var(--text-sub); margin-top:10px;">لا توجد ديون مسجلة حالياً.</p>';
+        return;
+    }
+
+    debts.forEach(d => {
+        container.innerHTML += `
+            <div class="card">
+                <div class="card-title" style="color:var(--danger)">مطلوب: ${d.customer}</div>
+                <div class="card-info">مبلغ الدين: <strong>${d.debt.toLocaleString()} د.ع</strong></div>
+                <div class="card-info">التاريخ: ${new Date(d.date).toLocaleDateString('ar-IQ')}</div>
+            </div>
+        `;
+    });
+}
+
+// ==========================================
+// 7. الاستماع المباشر للتغييرات في السحابة
+// ==========================================
+let liveModels = [];
+let liveSales = [];
+
+if (isOnline && db) {
+    db.collection('models').onSnapshot(snapshot => {
+        liveModels = snapshot.docs.map(doc => doc.data());
+        renderAll();
+    });
+
+    db.collection('sales').onSnapshot(snapshot => {
+        liveSales = snapshot.docs.map(doc => doc.data());
+        renderAll();
+    });
+} else {
+    renderAll();
+}
+</script>
+
 </body>
 </html>
