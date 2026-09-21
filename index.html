@@ -51,7 +51,6 @@
             padding-bottom: 75px;
         }
 
-        /* Header */
         header {
             background-color: var(--bg-secondary);
             padding: 15px 20px;
@@ -81,7 +80,6 @@
             width: 100%;
         }
 
-        /* Tabs / Screens */
         .page-section {
             display: none;
             animation: fadeIn 0.3s ease-in-out;
@@ -96,7 +94,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Cards & Elements */
         .card {
             background-color: var(--card-bg);
             border-radius: var(--radius);
@@ -153,7 +150,6 @@
             background-color: var(--accent-hover);
         }
 
-        /* Lists */
         .item-list {
             list-style: none;
         }
@@ -178,7 +174,6 @@
             padding: 5px 10px;
         }
 
-        /* Bottom Nav */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -212,7 +207,6 @@
             color: var(--accent-gold);
         }
 
-        /* Stats Grid */
         .stat-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -350,12 +344,13 @@
 
         // إعدادات مشروع Firebase الخاص بك (hlwa-abatich)
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
+            apiKey: "AIzaSyDF1WwFdugcjrNWYfs3QXo2ktatdeWuvf4",
             authDomain: "hlwa-abatich.firebaseapp.com",
             projectId: "hlwa-abatich",
-            storageBucket: "hlwa-abatich.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            storageBucket: "hlwa-abatich.firebasestorage.app",
+            messagingSenderId: "100175694788",
+            appId: "1:100175694788:web:3820cf0a38d72c6bcab291",
+            measurementId: "G-SCT7EX0CK4"
         };
 
         // تهيئة Firebase و Firestore
@@ -422,7 +417,7 @@
                 invoicesList.innerHTML += itemHTML;
                 recentList.innerHTML += itemHTML;
 
-                // تصنيف الديون (إذا كان يحتوي التفاصيل على كلمة دين)
+                // تصنيف الديون (إذا كان يحتوي التفاصيل على كلمة دين أو آجل)
                 if (details.includes('دين') || details.includes('آجل')) {
                     debtsList.innerHTML += itemHTML;
                 }
