@@ -20,6 +20,8 @@
             --accent-color: #c5a059;
             --text-color: #ffffff;
             --text-muted: #8a99ad;
+            --input-bg: #252d47;
+            --success-color: #2e7d32;
         }
 
         body {
@@ -56,7 +58,6 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            text-align: center;
         }
 
         .card {
@@ -67,11 +68,59 @@
             max-width: 400px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.2);
             border: 1px solid rgba(255,255,255,0.05);
+            box-sizing: border-box;
         }
 
-        p {
+        .form-group {
+            margin-bottom: 15px;
+            text-align: right;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
             color: var(--text-muted);
-            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--accent-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent-color);
+            color: #000;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-top: 10px;
+        }
+
+        button:active {
+            opacity: 0.8;
+        }
+
+        #statusMsg {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            text-align: center;
         }
     </style>
 </head>
@@ -83,20 +132,35 @@
 
     <main>
         <div class="card">
-            <h2>مرحباً بك في نظام إدارة المبيعات</h2>
-            <p>تم ربط التطبيق مع Firebase بنجاح للعمل كـ PWA على كافة الأجهزة الذكية.</p>
+            <h2>إضافة فاتورة جديدة</h2>
+            
+            <div class="form-group">
+                <label>اسم الزبون</label>
+                <input type="text" id="customerName" placeholder="أدخل اسم الزبون">
+            </div>
+
+            <div class="form-group">
+                <label>تفاصيل العباية / المنتج</label>
+                <input type="text" id="itemDetails" placeholder="مثال: عباية خليجي - قياس 56">
+            </div>
+
+            <div class="form-group">
+                <label>المبلغ الإجمالي (د.ع)</label>
+                <input type="number" id="totalAmount" placeholder="0">
+            </div>
+
+            <button id="saveBtn">حفظ الفاتورة أونلاين</button>
+            <div id="statusMsg"></div>
         </div>
     </main>
 
     <!-- Firebase SDK (Modular JS) -->
     <script type="module">
-      // Import the functions you need from the SDKs you need
       import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
       import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-analytics.js";
-      // TODO: Add SDKs for Firebase products that you want to use
-      // https://firebase.google.com/docs/web/setup#available-libraries
+      import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
-      // Your web app's Firebase configuration
+      // تهيئة Firebase
       const firebaseConfig = {
         apiKey: "AIzaSyDF1WwfdugcjrNWYfs3QXo2ktatdeWuvf4",
         authDomain: "hlwa-abatich.firebaseapp.com",
@@ -107,11 +171,51 @@
         measurementId: "G-SCT7EX0CK4"
       };
 
-      // Initialize Firebase
       const app = initializeApp(firebaseConfig);
       const analytics = getAnalytics(app);
+      const db = getFirestore(app);
 
-      console.log("Firebase initialized successfully for hlwa-abatich!");
+      // دالة حفظ الفاتورة في Firestore
+      async function saveInvoice() {
+          const customerName = document.getElementById('customerName').value.trim();
+          const itemDetails = document.getElementById('itemDetails').value.trim();
+          const totalAmount = document.getElementById('totalAmount').value;
+          const statusMsg = document.getElementById('statusMsg');
+
+          if(!customerName || !totalAmount) {
+              statusMsg.style.color = '#ff5252';
+              statusMsg.innerText = 'يرجى إدخال اسم الزبون والمبلغ!';
+              return;
+          }
+
+          statusMsg.style.color = '#c5a059';
+          statusMsg.innerText = 'جاري الحفظ...';
+
+          try {
+              const docRef = await addDoc(collection(db, "invoices"), {
+                  customerName: customerName,
+                  itemDetails: itemDetails,
+                  totalAmount: Number(totalAmount),
+                  createdAt: serverTimestamp()
+              });
+
+              statusMsg.style.color = '#4caf50';
+              statusMsg.innerText = 'تم حفظ الفاتورة بنجاح!';
+
+              // تفريغ الحقول
+              document.getElementById('customerName').value = '';
+              document.getElementById('itemDetails').value = '';
+              document.getElementById('totalAmount').value = '';
+
+          } catch (e) {
+              console.error("Error adding document: ", e);
+              statusMsg.style.color = '#ff5252';
+              statusMsg.innerText = 'حدث خطأ أثناء الحفظ: ' + e.message;
+          }
+      }
+
+      // ربط الزر بالدالة
+      document.getElementById('saveBtn').addEventListener('click', saveInvoice);
     </script>
 </body>
 </html>
