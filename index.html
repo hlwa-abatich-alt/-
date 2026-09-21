@@ -663,11 +663,13 @@ function renderDashboard(){
 
   const salesAgg = {};
   state.sales.forEach(s=>{ const key=s.modelId||('free::'+(s.productLabel||'')); salesAgg[key] = (salesAgg[key]||0) + num(s.quantity); });
-  const topModels = Object.entries(salesAgg).sort((a,b)=>b[1]-a[1]).slice(0,5)
+  const topModels = Object.entries(salesAgg).sort((a,b)=>b[1]-a[1]).slice(0,4)
     .map(([key,qty])=>{
       const modelId = key.startsWith('free::') ? null : key;
-      const label = modelId ? (modelById(modelId)?.name||'—') : key.replace('free::','') || 'بيع بدون موديل';
-      return {label, qty};
+      const m = modelId ? modelById(modelId) : null;
+      const label = m ? m.name : (key.replace('free::','') || 'بيع بدون موديل');
+      const img = (m && m.images && m.images[0]) ? m.images[0] : null;
+      return {label, qty, modelId, img};
     });
 
   return `
@@ -705,16 +707,19 @@ function renderDashboard(){
     ${renderRevenueAreaChart(monthData, maxVal)}
   </div>
 
-  <div class="section-title"><span class="ic">⭐</span> الأكثر مبيعاً</div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>الموديل</th><th>القطع المباعة</th></tr></thead>
-      <tbody>
-        ${topModels.length? topModels.map(x=>`<tr><td>${esc(x.label)}</td><td class="num">${x.qty}</td></tr>`).join('')
-          : `<tr class="empty-row"><td colspan="2">لا توجد مبيعات مسجلة بعد</td></tr>`}
-      </tbody>
-    </table>
-  </div>
+  <div class="section-title" style="cursor:pointer" onclick="navigate('soldmodels')"><span class="ic">⭐</span> الأكثر مبيعاً <span style="margin-inline-start:auto;font-size:12px;color:var(--accent);font-family:'IBM Plex Sans Arabic',sans-serif;font-weight:600;">عرض الكل مرتبة ←</span></div>
+  ${topModels.length ? `
+  <div class="model-grid">
+    ${topModels.map((x,i)=>`
+      <div class="model-card" onclick="navigate('soldmodels')">
+        <div class="thumb">${x.img?`<img src="${x.img}">`:'لا توجد صورة'}</div>
+        <div class="info">
+          <div class="code">#${i+1} الأكثر مبيعاً</div>
+          <div class="name">${esc(x.label)}</div>
+          <div class="row"><span>القطع المباعة</span><span class="num"><b>${x.qty}</b></span></div>
+        </div>
+      </div>`).join('')}
+  </div>` : `<div class="card" style="text-align:center;color:var(--text-faint);padding:30px;">لا توجد مبيعات مسجلة بعد</div>`}
   `;
 }
 function monthOptionsList(selected){
